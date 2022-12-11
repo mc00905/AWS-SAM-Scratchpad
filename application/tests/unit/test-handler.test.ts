@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { lambdaHandler } from '../../app';
+import { lambdaHandler } from '../../src/data-layer/HelloWorldFunction';
 
 describe('Unit test for app handler', function () {
     it('verifies successful response', async () => {

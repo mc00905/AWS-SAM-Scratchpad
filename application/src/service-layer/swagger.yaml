@@ -1,0 +1,90 @@
+
+openapi: 3.0.0
+
+info:
+  title: openapi-example-specification
+  version: 0.3.0
+  description: "An Open API Specification for my Scratchpad"
+
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+  ex-paramater-validation:
+    validateRequestBody: false
+    validateRequestParameters: true
+  ex-body-validation:
+    validateRequestBody: true
+    validateRequestParameters: false
+
+paths:
+  /createItem:
+    post:
+      operationId: basicDynamo
+      
+      x-amazon-apigateway-request-validator: ex-body-validation
+
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostToDynamoFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+      
+      responses:
+        '200':
+          description: A 200 response.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /getItem/{key}:
+    get:
+      operationId: getItem
+
+      x-amazon-apigateway-request-validator: ex-params-validation
+
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchDynamoFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: A 200 response
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    CreateItemRequest:
+      type: object
+      properties:
+        str:
+          type: string
+          description: text
+      required:
+        - str
