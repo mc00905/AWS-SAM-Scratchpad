@@ -7,7 +7,7 @@ import {
     PutCommand,
     PutCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { errAsync, ResultAsync } from 'neverthrow';
+import { ResultAsync } from 'neverthrow';
 import { DocumentNotFoundError, GenericInternalServerError } from '../../middleware/ErrorLibrary';
 
 export class ExampleAgent {
@@ -38,7 +38,7 @@ export class ExampleAgent {
         );
     }
 
-    public getDoc(key: string): ResultAsync<GetCommandOutput, GenericInternalServerError | DocumentNotFoundError> {
+    public getDoc(key: string): ResultAsync<GetCommandOutput, GenericInternalServerError> {
         const params: GetCommandInput = {
             TableName: process.env.TABLE_NAME,
             Key: {

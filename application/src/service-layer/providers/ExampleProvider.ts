@@ -1,4 +1,4 @@
-import { errAsync, ResultAsync } from 'neverthrow';
+import { err, errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { ExampleAgent } from '../../data-layer/data-agents.ts/ExampleAgent';
 import { DocumentNotFoundError, GenericInternalServerError } from '../../middleware/ErrorLibrary';
 
@@ -13,17 +13,18 @@ export class ExampleProvider {
         return this.agent.saveDoc(str);
     }
 
-    public getDocument(
+    public async getDocument(
         key: string,
-    ): ResultAsync<Record<string, any>, GenericInternalServerError | DocumentNotFoundError> {
-        const data = this.agent.getDoc(key);
-        return data
-            .map((obj) => {
-                if (!obj.Item) {
-                    return errAsync(new DocumentNotFoundError('Did not find document'));
-                }
-                return obj.Item;
-            })
-            .mapErr((e) => e);
+    ): Promise<ResultAsync<any, DocumentNotFoundError | GenericInternalServerError>> {
+        const req = await this.agent.getDoc(key);
+        if (req.isOk()) {
+            const value = req.value;
+            if (!value.Item) {
+                return errAsync(new DocumentNotFoundError('Document Not Found', `Document with key: ${key} not found`));
+            }
+            return okAsync(value.Item);
+        } else {
+            return errAsync(req.error);
+        }
     }
 }
