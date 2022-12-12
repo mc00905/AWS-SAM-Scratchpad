@@ -6,11 +6,14 @@ import {
     GetCommandOutput,
     PutCommand,
     PutCommandInput,
+    DeleteCommandInput,
+    DeleteCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { ResultAsync } from 'neverthrow';
-import { DocumentNotFoundError, GenericInternalServerError } from '../../middleware/ErrorLibrary';
+import { GenericInternalServerError } from '../../middleware/ErrorLibrary';
+import { Product } from '../../service-layer/types/Product';
 
-export class ExampleAgent {
+export class ProductAgent {
     private dynamoClient: DynamoDBClient;
     private dynamoDocumentClient: DynamoDBDocumentClient;
 
@@ -19,14 +22,10 @@ export class ExampleAgent {
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
     }
 
-    public saveDoc(str = 'random'): ResultAsync<void, GenericInternalServerError | DocumentNotFoundError> {
+    public saveProduct(product: Product): ResultAsync<void, GenericInternalServerError> {
         const params: PutCommandInput = {
             TableName: process.env.TABLE_NAME,
-            Item: {
-                PK: 'Primary',
-                SK: 'Sort',
-                Value: str,
-            },
+            Item: product,
         };
         return ResultAsync.fromPromise(
             (async () => {
@@ -38,12 +37,12 @@ export class ExampleAgent {
         );
     }
 
-    public getDoc(key: string): ResultAsync<GetCommandOutput, GenericInternalServerError> {
+    public getProduct(PK: string): ResultAsync<GetCommandOutput, GenericInternalServerError> {
         const params: GetCommandInput = {
             TableName: process.env.TABLE_NAME,
             Key: {
-                PK: key,
-                SK: 'Sort',
+                PK,
+                SK: PK,
             },
         };
         return ResultAsync.fromPromise(
@@ -52,7 +51,25 @@ export class ExampleAgent {
                 return data;
             })(),
             (e) => {
-                return new GenericInternalServerError('Failed to create in Dynamo', JSON.stringify(e));
+                return new GenericInternalServerError('Failed to fetch from Dynamo', JSON.stringify(e));
+            },
+        );
+    }
+
+    public deleteProduct(PK: string): ResultAsync<void, GenericInternalServerError> {
+        const params: DeleteCommandInput = {
+            TableName: process.env.TABLE_NAME,
+            Key: {
+                PK,
+                SK: PK,
+            },
+        };
+        return ResultAsync.fromPromise(
+            (async () => {
+                await this.dynamoDocumentClient.send(new DeleteCommand(params));
+            })(),
+            (e) => {
+                return new GenericInternalServerError('Failed to delete from Dynamo', JSON.stringify(e));
             },
         );
     }

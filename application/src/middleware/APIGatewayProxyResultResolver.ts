@@ -3,6 +3,7 @@ import { APIGatewayProxyResult } from 'aws-lambda';
 export enum ResponseLibrary {
     Success = 200,
     SuccessCreated = 201,
+    SuccessNoContent = 204,
     BadRequest = 400,
     ResourceNotFound = 404,
     InternalServerError = 500,
@@ -23,6 +24,13 @@ export const APIGatewayProxyResultResolver = (
                 }),
             };
         case ResponseLibrary.SuccessCreated:
+            return {
+                statusCode: status,
+                body: JSON.stringify({
+                    message,
+                }),
+            };
+        case ResponseLibrary.SuccessNoContent:
             return {
                 statusCode: status,
                 body: JSON.stringify({

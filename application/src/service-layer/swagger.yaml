@@ -18,17 +18,15 @@ x-amazon-apigateway-request-validators:
     validateRequestParameters: false
 
 paths:
-  /createItem:
+  /products:
     post:
-      operationId: basicDynamo
-      
+      operationId: createProduct
       x-amazon-apigateway-request-validator: ex-body-validation
-
       x-amazon-apigateway-integration:
         credentials:
           Fn::Sub: ${ApiAccessRole.Arn}
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostToDynamoFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateProductFunction.Arn}/invocations
         httpMethod: POST
         timeoutInMillis: 3000
         type: "aws_proxy"
@@ -38,33 +36,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateItemRequest'
+              $ref: '#/components/schemas/CreateProductRequest'
       
       responses:
-        '200':
-          description: A 200 response.
+        '201':
+          description: A 201 response.
           content:
             application/json:
               schema:
                 type: object
 
-  /getItem/{key}:
+  /products/{productId}:
     get:
-      operationId: getItem
-
-      x-amazon-apigateway-request-validator: ex-params-validation
-
+      operationId: getProduct
+      x-amazon-apigateway-request-validator: ex-paramater-validation
       x-amazon-apigateway-integration:
         credentials:
           Fn::Sub: ${ApiAccessRole.Arn}
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchDynamoFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProductFunction.Arn}/invocations
         httpMethod: POST
         timeoutInMillis: 3000
         type: "aws_proxy"
 
       parameters:
-        - name: key
+        - name: productId
           in: path
           required: true
           schema:
@@ -78,13 +74,215 @@ paths:
               schema:
                 type: object
 
+    delete:
+      operationId: deleteProduct
+      x-amazon-apigateway-request-validator: ex-paramater-validation
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteProductFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '204':
+          description: A 204 response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /products/{productId}/stock:
+    post:
+      operationId: AddStockOfProductToWarehouse
+      x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddStockOfProductToWarehouseFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+      
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddStockOfProductToWarehouseRequest'
+      
+      responses:
+        '201':
+          description: A 201 response.
+          content:
+            application/json:
+              schema:
+                type: object
+
+    get:
+      operationId: getAllStockForProduct
+      x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllStockForProductFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+      
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      
+      responses:
+        '200':
+          description: A 200 response.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /warehouses:
+    post:
+      operationId: createWarehouse
+      x-amazon-apigateway-request-validator: ex-body-validation
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateWarehouseFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWarehouseRequest'
+      
+      responses:
+        '201':
+          description: A 201 response.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /warehouses/{warehouseId}:
+    get:
+      operationId: getWarehouse
+      x-amazon-apigateway-request-validator: ex-paramater-validation
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetWarehouseFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+
+      parameters:
+        - name: warehouseId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: A 200 response
+          content:
+            application/json:
+              schema:
+                type: object
+
+    delete:
+      operationId: deleteWarehouse
+      x-amazon-apigateway-request-validator: ex-paramater-validation
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${ApiAccessRole.Arn}
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteWarehouseFunction.Arn}/invocations
+        httpMethod: POST
+        timeoutInMillis: 3000
+        type: "aws_proxy"
+
+      parameters:
+        - name: warehouseId 
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '204':
+          description: A 204 response
+          content:
+            application/json:
+              schema:
+                type: object
+
 components:
   schemas:
-    CreateItemRequest:
+    CreateProductRequest:
       type: object
       properties:
-        str:
+        name:
+          type: string
+          description: text
+        description:
           type: string
           description: text
       required:
-        - str
+        - name
+        - description
+
+    CreateWarehouseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: text
+        postcode:
+          type: string
+          description: text
+      required:
+        - name
+        - postcode
+
+    AddStockOfProductToWarehouseRequest:
+      type: object
+      properties:
+        warehouseId:
+          type: string
+          description: text
+        quantity:
+          type: number
+          description: number
+      required:
+        - warehouseId
+        - quantity
