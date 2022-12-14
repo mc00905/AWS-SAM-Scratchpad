@@ -16,6 +16,7 @@ Parameters:
     Default: development
 
 Resources:
+  #------ API Roles Config -------------------------------------------------------------------------------------------------------------
   ApiAccessRole:
     Type: AWS::IAM::Role
     Properties:
@@ -37,9 +38,17 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: ${PostToDynamoFunction.Arn}
-                  - Fn::Sub: ${FetchDynamoFunction.Arn}
+                  - Fn::Sub: ${CreateProductFunction.Arn}
+                  - Fn::Sub: ${GetProductFunction.Arn}
+                  - Fn::Sub: ${DeleteProductFunction.Arn}
+                  - Fn::Sub: ${CreateWarehouseFunction.Arn}
+                  - Fn::Sub: ${GetWarehouseFunction.Arn}
+                  - Fn::Sub: ${DeleteWarehouseFunction.Arn}
+                  - Fn::Sub: ${AddStockOfProductToWarehouseFunction.Arn}
+                  - Fn::Sub: ${GetAllStockForProductFunction.Arn}
 
+
+  #------ API Config -------------------------------------------------------------------------------------------------------------
   Api:
     Type: AWS::Serverless::Api
     Properties:
@@ -52,10 +61,11 @@ Resources:
           Parameters:
             Location: application/src/service-layer/swagger.yaml
   
+  #------ DYNAMO Config -------------------------------------------------------------------------------------------------------------
   ExampleTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: example-table
+      TableName: single-table-design-table
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
@@ -68,11 +78,12 @@ Resources:
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
-  PostToDynamoFunction:
+  #------ PRODUCTS -------------------------------------------------------------------------------------------------------------
+  CreateProductFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: application/src/service-layer/controllers/
-      Handler: ExampleController.createItem
+      Handler: ProductController.createProduct
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -89,13 +100,13 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
-        - ExampleController.ts
+        - ProductController.ts
 
-  FetchDynamoFunction:
+  GetProductFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: application/src/service-layer/controllers/
-      Handler: ExampleController.getItem
+      Handler: ProductController.getProduct
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -112,6 +123,172 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
-        - ExampleController.ts
+        - ProductController.ts
 
+  DeleteProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: ProductController.deleteProduct
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - ProductController.ts
+
+  #------ WAREHOUSE ------------------------------------------------------------------------------------------------------------
+  CreateWarehouseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: WarehouseController.createWarehouse
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - WarehouseController.ts
+
+  GetWarehouseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: WarehouseController.getWarehouse
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - WarehouseController.ts
+
+  DeleteWarehouseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: WarehouseController.deleteWarehouse
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - WarehouseController.ts
+
+#------ PRODUCT_WAREHOUSE ------------------------------------------------------------------------------------------------------------
+  AddStockOfProductToWarehouseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: ProductWarehouseController.addStockOfProductToWarehouse
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+       - SNSPublishMessagePolicy:
+          TopicName: !GetAtt ProductWarehouseSNSTopic.TopicName
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+          SNS_TOPIC: !Ref ProductWarehouseSNSTopic
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - ProductWarehouseController.ts
+
+  # LogOutTopicSubscriptionFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: application/src/service-layer/subscribtions/
+  #     Handler: ProductWarehouseSubscriptions.print
+  #     Runtime: nodejs18.x
+  #     Architectures:
+  #       - x86_64
+  #     Environment:
+  #       Variables:
+  #         TABLE_NAME: !Ref ExampleTable
+  #   Metadata:
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: "es2020"
+  #       Sourcemap: true
+  #       EntryPoints: 
+  #       - ProductWarehouseSubscriptions.ts
+
+  GetAllStockForProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/controllers/
+      Handler: ProductWarehouseController.getAllStockForProduct
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - DynamoDBCrudPolicy:
+          TableName: !Ref ExampleTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ExampleTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - ProductWarehouseController.ts
+  
+#------ SNS Definitons ------------------------------------------------------------------------------------------------------------
+  ProductWarehouseSNSTopic:
+    Type: AWS::SNS::Topic
 

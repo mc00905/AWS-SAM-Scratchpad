@@ -18,7 +18,7 @@ export class WarehouseAgent {
     private dynamoDocumentClient: DynamoDBDocumentClient;
 
     constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocumentClient) {
-        this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.Region });
+        this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
     }
 
