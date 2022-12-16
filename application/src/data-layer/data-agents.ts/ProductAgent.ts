@@ -8,6 +8,7 @@ import {
     PutCommandInput,
     DeleteCommandInput,
     DeleteCommand,
+    PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { ResultAsync } from 'neverthrow';
 import { GenericInternalServerError } from '../../middleware/ErrorLibrary';
@@ -22,7 +23,7 @@ export class ProductAgent {
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
     }
 
-    public saveProduct(product: Product): ResultAsync<void, GenericInternalServerError> {
+    public saveProduct(product: Product): ResultAsync<Product, GenericInternalServerError> {
         const params: PutCommandInput = {
             TableName: process.env.TABLE_NAME,
             Item: product,
@@ -30,6 +31,7 @@ export class ProductAgent {
         return ResultAsync.fromPromise(
             (async () => {
                 await this.dynamoDocumentClient.send(new PutCommand(params));
+                return product;
             })(),
             (e) => {
                 return new GenericInternalServerError('Failed to create in Dynamo', JSON.stringify(e));

@@ -4,19 +4,22 @@ import { EntityTypePrefixes } from '../enums/EntityTypePrefixes';
 import { EntityTypes } from '../enums/EntityTypes';
 import { ProductWarehouseAgent } from '../../data-layer/data-agents.ts/ProductWarehouseAgent';
 import { ProductWarehouse } from '../types/ProductWarehouse';
+import { ProductWarehousePublishers } from '../publishers/ProductWarehousePublishers';
 
 export class ProductWarehouseProvider {
     private agent: ProductWarehouseAgent;
+    private publishers: ProductWarehousePublishers;
 
-    constructor(agent?: ProductWarehouseAgent) {
+    constructor(agent?: ProductWarehouseAgent, publishers?: ProductWarehousePublishers) {
         this.agent = agent || new ProductWarehouseAgent();
+        this.publishers = publishers || new ProductWarehousePublishers();
     }
 
     public async addStockOfProductToWarehouse(
         productId: string,
         warehouseId: string,
         quantity: number,
-    ): Promise<ResultAsync<void, GenericInternalServerError>> {
+    ): Promise<ResultAsync<ProductWarehouse, GenericInternalServerError>> {
         const PK = `${EntityTypePrefixes.PRODUCT}${productId}`;
         const SK = `${EntityTypePrefixes.WAREHOUSE}${warehouseId}`;
         const productWarehouse: ProductWarehouse = {
@@ -26,8 +29,9 @@ export class ProductWarehouseProvider {
             EntityType: EntityTypes.PRODUCT_WAREHOUSE,
         };
         const op = await this.agent.addStockOfProductToWarehouse(productWarehouse);
+        await this.publishers.publish('Successfully created!');
         if (op.isOk()) {
-            return okAsync(op.value);
+            return okAsync(productWarehouse);
         } else {
             return errAsync(op.error);
         }

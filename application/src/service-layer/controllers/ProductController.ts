@@ -10,10 +10,10 @@ export const createProduct = async (event: APIGatewayProxyEventV2): Promise<APIG
     const body = normalisedEvent.body;
     const name = body.name;
     const description = body.description;
-    const req = await provider.createProduct(name, description);
-    return req.match(
-        () => {
-            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated');
+    const res = await provider.createProduct(name, description);
+    return res.match(
+        (res) => {
+            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated', res);
         },
         (e) => {
             return APIGatewayProxyResultResolver(ResponseLibrary.InternalServerError, 'SomethingWentWrong', e);

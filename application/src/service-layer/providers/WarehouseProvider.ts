@@ -16,7 +16,7 @@ export class WarehouseProvider {
     public async createWarehouse(
         name: string,
         postcode: string,
-    ): Promise<ResultAsync<void, GenericInternalServerError>> {
+    ): Promise<ResultAsync<NormalisedWarehouse, GenericInternalServerError>> {
         const warehouseId = uuidv4();
         const PK = `${EntityTypePrefixes.WAREHOUSE}${warehouseId}`;
         const warehouse: Warehouse = {
@@ -28,7 +28,12 @@ export class WarehouseProvider {
         };
         const op = await this.agent.saveWarehouse(warehouse);
         if (op.isOk()) {
-            return okAsync(op.value);
+            const normalisedWarehouse: NormalisedWarehouse = {
+                name: warehouse.Name,
+                postcode: warehouse.Postcode,
+                warhouseId: warehouseId,
+            };
+            return okAsync(normalisedWarehouse);
         } else {
             return errAsync(op.error);
         }

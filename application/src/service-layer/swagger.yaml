@@ -138,7 +138,7 @@ paths:
 
     get:
       operationId: getAllStockForProduct
-      x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-request-validator: ex-paramater-validation
       x-amazon-apigateway-integration:
         credentials:
           Fn::Sub: ${ApiAccessRole.Arn}

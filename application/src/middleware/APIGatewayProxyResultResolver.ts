@@ -12,7 +12,7 @@ export enum ResponseLibrary {
 export const APIGatewayProxyResultResolver = (
     status: ResponseLibrary,
     message: string,
-    payload?: any,
+    payload?: object | string,
 ): APIGatewayProxyResult => {
     switch (status) {
         case ResponseLibrary.Success:
@@ -28,6 +28,7 @@ export const APIGatewayProxyResultResolver = (
                 statusCode: status,
                 body: JSON.stringify({
                     message,
+                    data: payload,
                 }),
             };
         case ResponseLibrary.SuccessNoContent:

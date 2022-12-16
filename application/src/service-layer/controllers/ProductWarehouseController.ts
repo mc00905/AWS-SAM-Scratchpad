@@ -15,10 +15,10 @@ export const addStockOfProductToWarehouse = async (event: APIGatewayProxyEventV2
     const warehouseId = body.warehouseId;
     const quantity = body.quantity;
 
-    const req = await provider.addStockOfProductToWarehouse(productId, warehouseId, quantity);
-    return req.match(
-        () => {
-            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated');
+    const res = await provider.addStockOfProductToWarehouse(productId, warehouseId, quantity);
+    return res.match(
+        (res) => {
+            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated', res);
         },
         (e) => {
             return APIGatewayProxyResultResolver(ResponseLibrary.InternalServerError, 'SomethingWentWrong', e);

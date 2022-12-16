@@ -16,7 +16,7 @@ export class ProductProvider {
     public async createProduct(
         name: string,
         description: string,
-    ): Promise<ResultAsync<void, GenericInternalServerError>> {
+    ): Promise<ResultAsync<NormalisedProduct, GenericInternalServerError>> {
         const productId = uuidv4();
         const PK = `${EntityTypePrefixes.PRODUCT}${productId}`;
         const product: Product = {
@@ -28,7 +28,12 @@ export class ProductProvider {
         };
         const op = await this.agent.saveProduct(product);
         if (op.isOk()) {
-            return okAsync(op.value);
+            const normalisedProduct: NormalisedProduct = {
+                name: product.Name,
+                description: product.Description,
+                productId: productId,
+            };
+            return okAsync(normalisedProduct);
         } else {
             return errAsync(op.error);
         }

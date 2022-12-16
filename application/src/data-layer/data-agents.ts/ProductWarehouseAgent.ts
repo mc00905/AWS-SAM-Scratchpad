@@ -7,7 +7,6 @@ import {
     QueryCommand,
     QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { SNSClient, PublishCommand, PublishCommandInput } from '@aws-sdk/client-sns';
 import { ResultAsync } from 'neverthrow';
 import { GenericInternalServerError } from '../../middleware/ErrorLibrary';
 import { EntityTypePrefixes } from '../../service-layer/enums/EntityTypePrefixes';
@@ -16,29 +15,23 @@ import { ProductWarehouse } from '../../service-layer/types/ProductWarehouse';
 export class ProductWarehouseAgent {
     private dynamoClient: DynamoDBClient;
     private dynamoDocumentClient: DynamoDBDocumentClient;
-    private snsClient: SNSClient;
 
-    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocumentClient, snsClient?: SNSClient) {
+    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocumentClient) {
         this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
-        this.snsClient = snsClient || new SNSClient({ region: process.env.AWS_REGION });
     }
 
     public addStockOfProductToWarehouse(
         productWarehouse: ProductWarehouse,
-    ): ResultAsync<void, GenericInternalServerError> {
+    ): ResultAsync<ProductWarehouse, GenericInternalServerError> {
         const params: PutCommandInput = {
             TableName: process.env.TABLE_NAME,
             Item: productWarehouse,
         };
-        const snsPublishParams: PublishCommandInput = {
-            TopicArn: process.env.SNS_TOPIC,
-            Message: 'Hello World!',
-        };
         return ResultAsync.fromPromise(
             (async () => {
-                await this.snsClient.send(new PublishCommand(snsPublishParams));
                 await this.dynamoDocumentClient.send(new PutCommand(params));
+                return productWarehouse;
             })(),
             (e) => {
                 return new GenericInternalServerError('Failed to create in Dynamo', JSON.stringify(e));

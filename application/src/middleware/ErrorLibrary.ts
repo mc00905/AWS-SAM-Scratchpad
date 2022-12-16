@@ -20,7 +20,6 @@ export class RouteNotFoundError extends ErrorWrapper404 {
 
 export class DocumentNotFoundError extends ErrorWrapper404 {
     constructor(message: string, details?: string) {
-        console.log('details: ', JSON.stringify(details));
         super(ErrorLibrary.DocumentNotFoundError, message, details);
     }
 }

@@ -10,10 +10,10 @@ export const createWarehouse = async (event: APIGatewayProxyEventV2): Promise<AP
     const body = normalisedEvent.body;
     const name = body.name;
     const postcode = body.postcode;
-    const req = await provider.createWarehouse(name, postcode);
-    return req.match(
-        () => {
-            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated');
+    const res = await provider.createWarehouse(name, postcode);
+    return res.match(
+        (res) => {
+            return APIGatewayProxyResultResolver(ResponseLibrary.SuccessCreated, 'ResourceSuccessfullyCreated', res);
         },
         (e) => {
             return APIGatewayProxyResultResolver(ResponseLibrary.InternalServerError, 'SomethingWentWrong', e);

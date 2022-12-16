@@ -6,6 +6,7 @@ import {
     GetCommandOutput,
     PutCommand,
     PutCommandInput,
+    PutCommandOutput,
     DeleteCommandInput,
     DeleteCommand,
 } from '@aws-sdk/lib-dynamodb';
@@ -22,7 +23,7 @@ export class WarehouseAgent {
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
     }
 
-    public saveWarehouse(warehouse: Warehouse): ResultAsync<void, GenericInternalServerError> {
+    public saveWarehouse(warehouse: Warehouse): ResultAsync<Warehouse, GenericInternalServerError> {
         const params: PutCommandInput = {
             TableName: process.env.TABLE_NAME,
             Item: warehouse,
@@ -30,6 +31,7 @@ export class WarehouseAgent {
         return ResultAsync.fromPromise(
             (async () => {
                 await this.dynamoDocumentClient.send(new PutCommand(params));
+                return warehouse;
             })(),
             (e) => {
                 return new GenericInternalServerError('Failed to create in Dynamo', JSON.stringify(e));

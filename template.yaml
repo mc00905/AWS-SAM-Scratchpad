@@ -245,25 +245,31 @@ Resources:
         EntryPoints: 
         - ProductWarehouseController.ts
 
-  # LogOutTopicSubscriptionFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: application/src/service-layer/subscribtions/
-  #     Handler: ProductWarehouseSubscriptions.print
-  #     Runtime: nodejs18.x
-  #     Architectures:
-  #       - x86_64
-  #     Environment:
-  #       Variables:
-  #         TABLE_NAME: !Ref ExampleTable
-  #   Metadata:
-  #     BuildMethod: esbuild
-  #     BuildProperties:
-  #       Minify: true
-  #       Target: "es2020"
-  #       Sourcemap: true
-  #       EntryPoints: 
-  #       - ProductWarehouseSubscriptions.ts
+  PrintTopicSubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/subscriptions/
+      Handler: ProductWarehouseSubscriptions.print
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref ProductWarehouseSNSTopic
+            SqsSubscription: true
+      Environment:
+        Variables:
+          SNS_TOPIC: !Ref ProductWarehouseSNSTopic
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - ProductWarehouseSubscriptions.ts
 
   GetAllStockForProductFunction:
     Type: AWS::Serverless::Function
@@ -291,4 +297,7 @@ Resources:
 #------ SNS Definitons ------------------------------------------------------------------------------------------------------------
   ProductWarehouseSNSTopic:
     Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: ProductWarehouseSNSTopic
+      TopicName: ProductWarehouseSNSTopic
 
