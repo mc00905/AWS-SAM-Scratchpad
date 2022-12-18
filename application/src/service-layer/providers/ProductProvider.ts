@@ -47,7 +47,7 @@ export class ProductProvider {
         const op = await this.agent.getProduct(PK);
         if (op.isOk()) {
             const value = op.value;
-            const item = value.Item;
+            const item = value.Item as Product;
             if (!item) {
                 return errAsync(
                     new DocumentNotFoundError('Document Not Found', `Product with ProductId: ${productId} not found`),
@@ -69,7 +69,7 @@ export class ProductProvider {
         const PK = `${EntityTypePrefixes.PRODUCT}${productId}`;
         const op = await this.agent.deleteProduct(PK);
         if (op.isOk()) {
-            return okAsync(op.value);
+            return okAsync(undefined);
         } else {
             return errAsync(op.error);
         }

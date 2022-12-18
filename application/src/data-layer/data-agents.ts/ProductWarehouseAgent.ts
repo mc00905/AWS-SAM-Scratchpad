@@ -8,17 +8,19 @@ import { ProductWarehouse } from '../../service-layer/types/ProductWarehouse';
 export class ProductWarehouseAgent {
     private dynamoClient: DynamoDBClient;
     private dynamoDocumentClient: DynamoDBDocument;
+    private tableName?: string;
 
-    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument) {
+    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument, tableName?: string) {
         this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocument.from(this.dynamoClient);
+        this.tableName = tableName || process.env.TABLE_NAME;
     }
 
     public addStockOfProductToWarehouse(
         productWarehouse: ProductWarehouse,
     ): ResultAsync<ProductWarehouse, GenericInternalServerError> {
         const params: PutCommandInput = {
-            TableName: process.env.TABLE_NAME,
+            TableName: this.tableName,
             Item: productWarehouse,
         };
         return ResultAsync.fromPromise(
@@ -34,7 +36,7 @@ export class ProductWarehouseAgent {
 
     public getAllStockForProduct(PK: string): ResultAsync<QueryCommandOutput, GenericInternalServerError> {
         const params: QueryCommandInput = {
-            TableName: process.env.TABLE_NAME,
+            TableName: this.tableName,
             KeyConditionExpression: '#pk= :pk AND begins_with ( #sk, :sk )',
             ExpressionAttributeValues: {
                 ':pk': PK,
@@ -45,14 +47,8 @@ export class ProductWarehouseAgent {
                 '#sk': 'SK',
             },
         };
-        return ResultAsync.fromPromise(
-            (async () => {
-                const data = await this.dynamoDocumentClient.query(params);
-                return data;
-            })(),
-            (e) => {
-                return new GenericInternalServerError('Failed to fetch from Dynamo', JSON.stringify(e));
-            },
-        );
+        return ResultAsync.fromPromise(this.dynamoDocumentClient.query(params), (e) => {
+            return new GenericInternalServerError('Failed to fetch from Dynamo', JSON.stringify(e));
+        });
     }
 }

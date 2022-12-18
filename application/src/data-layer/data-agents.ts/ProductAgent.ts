@@ -13,15 +13,17 @@ import { Product } from '../../service-layer/types/Product';
 export class ProductAgent {
     private dynamoClient: DynamoDBClient;
     private dynamoDocumentClient: DynamoDBDocument;
+    private tableName?: string;
 
-    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument) {
+    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument, tableName?: string) {
         this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
         this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocument.from(this.dynamoClient);
+        this.tableName = tableName || process.env.TABLE_NAME;
     }
 
-    public saveProduct(product: Product, tableName?: string): ResultAsync<Product, GenericInternalServerError> {
+    public saveProduct(product: Product): ResultAsync<Product, GenericInternalServerError> {
         const params: PutCommandInput = {
-            TableName: tableName ? tableName : process.env.TABLE_NAME,
+            TableName: this.tableName,
             Item: product,
         };
         return ResultAsync.fromPromise(
@@ -37,26 +39,20 @@ export class ProductAgent {
 
     public getProduct(PK: string): ResultAsync<GetCommandOutput, GenericInternalServerError> {
         const params: GetCommandInput = {
-            TableName: process.env.TABLE_NAME,
+            TableName: this.tableName,
             Key: {
                 PK,
                 SK: PK,
             },
         };
-        return ResultAsync.fromPromise(
-            (async () => {
-                const data = await this.dynamoDocumentClient.get(params);
-                return data;
-            })(),
-            (e) => {
-                return new GenericInternalServerError('Failed to fetch from Dynamo', JSON.stringify(e));
-            },
-        );
+        return ResultAsync.fromPromise(this.dynamoDocumentClient.get(params), (e) => {
+            return new GenericInternalServerError('Failed to fetch from Dynamo', JSON.stringify(e));
+        });
     }
 
     public deleteProduct(PK: string): ResultAsync<void, GenericInternalServerError> {
         const params: DeleteCommandInput = {
-            TableName: process.env.TABLE_NAME,
+            TableName: this.tableName,
             Key: {
                 PK,
                 SK: PK,

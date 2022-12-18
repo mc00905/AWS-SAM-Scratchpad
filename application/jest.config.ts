@@ -9,6 +9,7 @@ export default {
     },
     clearMocks: true,
     collectCoverage: true,
+    collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
     coverageDirectory: 'coverage',
     coverageProvider: 'v8',
     testMatch: ['**/tests/unit/**/*.test.ts'],
