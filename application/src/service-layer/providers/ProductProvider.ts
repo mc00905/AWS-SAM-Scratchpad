@@ -16,8 +16,9 @@ export class ProductProvider {
     public async createProduct(
         name: string,
         description: string,
+        id?: string,
     ): Promise<ResultAsync<NormalisedProduct, GenericInternalServerError>> {
-        const productId = uuidv4();
+        const productId = id ? id : uuidv4();
         const PK = `${EntityTypePrefixes.PRODUCT}${productId}`;
         const product: Product = {
             PK,

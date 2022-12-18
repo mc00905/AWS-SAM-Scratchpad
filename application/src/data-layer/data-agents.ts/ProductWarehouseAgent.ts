@@ -1,12 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-    DynamoDBDocumentClient,
-    PutCommand,
-    PutCommandInput,
-    QueryCommandOutput,
-    QueryCommand,
-    QueryCommandInput,
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocument, PutCommandInput, QueryCommandOutput, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { ResultAsync } from 'neverthrow';
 import { GenericInternalServerError } from '../../middleware/ErrorLibrary';
 import { EntityTypePrefixes } from '../../service-layer/enums/EntityTypePrefixes';
@@ -14,11 +7,11 @@ import { ProductWarehouse } from '../../service-layer/types/ProductWarehouse';
 
 export class ProductWarehouseAgent {
     private dynamoClient: DynamoDBClient;
-    private dynamoDocumentClient: DynamoDBDocumentClient;
+    private dynamoDocumentClient: DynamoDBDocument;
 
-    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocumentClient) {
+    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument) {
         this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
-        this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
+        this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocument.from(this.dynamoClient);
     }
 
     public addStockOfProductToWarehouse(
@@ -30,7 +23,7 @@ export class ProductWarehouseAgent {
         };
         return ResultAsync.fromPromise(
             (async () => {
-                await this.dynamoDocumentClient.send(new PutCommand(params));
+                await this.dynamoDocumentClient.put(params);
                 return productWarehouse;
             })(),
             (e) => {
@@ -54,7 +47,7 @@ export class ProductWarehouseAgent {
         };
         return ResultAsync.fromPromise(
             (async () => {
-                const data = await this.dynamoDocumentClient.send(new QueryCommand(params));
+                const data = await this.dynamoDocumentClient.query(params);
                 return data;
             })(),
             (e) => {

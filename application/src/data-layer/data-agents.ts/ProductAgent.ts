@@ -1,14 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
-    DynamoDBDocumentClient,
-    GetCommand,
+    DynamoDBDocument,
     GetCommandInput,
     GetCommandOutput,
-    PutCommand,
     PutCommandInput,
     DeleteCommandInput,
-    DeleteCommand,
-    PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { ResultAsync } from 'neverthrow';
 import { GenericInternalServerError } from '../../middleware/ErrorLibrary';
@@ -16,21 +12,21 @@ import { Product } from '../../service-layer/types/Product';
 
 export class ProductAgent {
     private dynamoClient: DynamoDBClient;
-    private dynamoDocumentClient: DynamoDBDocumentClient;
+    private dynamoDocumentClient: DynamoDBDocument;
 
-    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocumentClient) {
+    constructor(dynamoClient?: DynamoDBClient, dynamoDocumentClient?: DynamoDBDocument) {
         this.dynamoClient = dynamoClient || new DynamoDBClient({ region: process.env.AWS_REGION });
-        this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocumentClient.from(this.dynamoClient);
+        this.dynamoDocumentClient = dynamoDocumentClient || DynamoDBDocument.from(this.dynamoClient);
     }
 
-    public saveProduct(product: Product): ResultAsync<Product, GenericInternalServerError> {
+    public saveProduct(product: Product, tableName?: string): ResultAsync<Product, GenericInternalServerError> {
         const params: PutCommandInput = {
-            TableName: process.env.TABLE_NAME,
+            TableName: tableName ? tableName : process.env.TABLE_NAME,
             Item: product,
         };
         return ResultAsync.fromPromise(
             (async () => {
-                await this.dynamoDocumentClient.send(new PutCommand(params));
+                await this.dynamoDocumentClient.put(params);
                 return product;
             })(),
             (e) => {
@@ -49,7 +45,7 @@ export class ProductAgent {
         };
         return ResultAsync.fromPromise(
             (async () => {
-                const data = await this.dynamoDocumentClient.send(new GetCommand(params));
+                const data = await this.dynamoDocumentClient.get(params);
                 return data;
             })(),
             (e) => {
@@ -68,7 +64,7 @@ export class ProductAgent {
         };
         return ResultAsync.fromPromise(
             (async () => {
-                await this.dynamoDocumentClient.send(new DeleteCommand(params));
+                await this.dynamoDocumentClient.delete(params);
             })(),
             (e) => {
                 return new GenericInternalServerError('Failed to delete from Dynamo', JSON.stringify(e));
