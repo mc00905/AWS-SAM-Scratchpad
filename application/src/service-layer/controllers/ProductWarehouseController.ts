@@ -1,9 +1,9 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { APIGatewayProxyEventFormatter } from '../../middleware/APIGatewayProxyEventFormatter';
 import { APIGatewayProxyResultResolver, ResponseLibrary } from '../../middleware/APIGatewayProxyResultResolver';
 import { ProductWarehouseProvider } from '../providers/ProductWarehouseProvider';
 
-export const addStockOfProductToWarehouse = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> => {
+export const addStockOfProductToWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const normalisedEvent = APIGatewayProxyEventFormatter(event);
     const provider = new ProductWarehouseProvider();
     const pathParams = normalisedEvent.pathParameters;
@@ -26,7 +26,7 @@ export const addStockOfProductToWarehouse = async (event: APIGatewayProxyEventV2
     );
 };
 
-export const getAllStockForProduct = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> => {
+export const getAllStockForProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const normalisedEvent = APIGatewayProxyEventFormatter(event);
     const provider = new ProductWarehouseProvider();
     const pathParams = normalisedEvent.pathParameters;

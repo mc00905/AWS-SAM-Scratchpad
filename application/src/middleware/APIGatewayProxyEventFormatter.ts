@@ -2,7 +2,7 @@ import {
     APIGatewayProxyEventHeaders,
     APIGatewayProxyEventPathParameters,
     APIGatewayProxyEventQueryStringParameters,
-    APIGatewayProxyEventV2,
+    APIGatewayProxyEvent,
 } from 'aws-lambda';
 
 export interface SimplifiedEvent {
@@ -12,7 +12,7 @@ export interface SimplifiedEvent {
     queryParameters: APIGatewayProxyEventQueryStringParameters;
 }
 
-export const APIGatewayProxyEventFormatter = (event: APIGatewayProxyEventV2): SimplifiedEvent => {
+export const APIGatewayProxyEventFormatter = (event: APIGatewayProxyEvent): SimplifiedEvent => {
     const body = event.body ? JSON.parse(event.body) : {};
     const headers = event.headers;
     const queryParameters = event.queryStringParameters || {};

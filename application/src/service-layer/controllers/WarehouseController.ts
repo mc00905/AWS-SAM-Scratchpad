@@ -1,10 +1,10 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { APIGatewayProxyEventFormatter } from '../../middleware/APIGatewayProxyEventFormatter';
 import { APIGatewayProxyResultResolver, ResponseLibrary } from '../../middleware/APIGatewayProxyResultResolver';
 import { DocumentNotFoundError } from '../../middleware/ErrorLibrary';
 import { WarehouseProvider } from '../providers/WarehouseProvider';
 
-export const createWarehouse = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> => {
+export const createWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const normalisedEvent = APIGatewayProxyEventFormatter(event);
     const provider = new WarehouseProvider();
     const body = normalisedEvent.body;
@@ -21,7 +21,7 @@ export const createWarehouse = async (event: APIGatewayProxyEventV2): Promise<AP
     );
 };
 
-export const getWarehouse = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> => {
+export const getWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const normalisedEvent = APIGatewayProxyEventFormatter(event);
     const provider = new WarehouseProvider();
     const pathParams = normalisedEvent.pathParameters;
@@ -52,7 +52,7 @@ export const getWarehouse = async (event: APIGatewayProxyEventV2): Promise<APIGa
     );
 };
 
-export const deleteWarehouse = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> => {
+export const deleteWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const normalisedEvent = APIGatewayProxyEventFormatter(event);
     const provider = new WarehouseProvider();
     const pathParams = normalisedEvent.pathParameters;
