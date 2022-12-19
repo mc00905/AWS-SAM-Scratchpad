@@ -17,6 +17,17 @@ x-amazon-apigateway-request-validators:
     validateRequestBody: true
     validateRequestParameters: false
 
+x-amazon-apigateway-gateway-responses:
+  BAD_REQUEST_BODY:
+    statusCode: 400
+    responseTemplates:
+      application/json: "{\n\"message\": $context.error.messageString $context.error.validationErrorString,\n\"statusCode\": 400\n}"
+  BAD_REQUEST_PARAMETERS:
+    statusCode: 400
+    responseTemplates:
+      application/json: "{\n\"message\": $context.error.messageString,\n\"statusCode\": 400\n}"
+
+
 paths:
   /products:
     post:
@@ -44,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ProductResponse'
 
   /products/{productId}:
     get:
@@ -68,11 +79,11 @@ paths:
 
       responses:
         '200':
-          description: A 200 response
+          description: A 200 response.
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ProductResponse'
 
     delete:
       operationId: deleteProduct
@@ -95,11 +106,7 @@ paths:
 
       responses:
         '204':
-          description: A 204 response
-          content:
-            application/json:
-              schema:
-                type: object
+          description: A 204 response 
 
   /products/{productId}/stock:
     post:
@@ -260,6 +267,23 @@ components:
       required:
         - name
         - description
+
+    ProductResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: text
+        description:
+          type: string
+          description: text
+        productId:
+          type: string
+          description: text
+      required:
+        - name
+        - description
+        - productId
 
     CreateWarehouseRequest:
       type: object

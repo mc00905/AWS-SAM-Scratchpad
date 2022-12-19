@@ -1,17 +1,17 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyHandler } from 'aws-lambda';
 import { ProductController } from '../controllers/ProductController';
 
-export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const createProduct: APIGatewayProxyHandler = async (event) => {
     const controller = new ProductController();
     return controller.createProduct(event);
 };
 
-export const getProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const getProduct: APIGatewayProxyHandler = async (event) => {
     const controller = new ProductController();
     return controller.getProduct(event);
 };
 
-export const deleteProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const deleteProduct: APIGatewayProxyHandler = async (event) => {
     const controller = new ProductController();
     return controller.deleteProduct(event);
 };
