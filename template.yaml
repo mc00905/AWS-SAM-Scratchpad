@@ -52,11 +52,6 @@ Resources:
       Name:
         Fn::Sub: ${AppName}-api
       StageName: development
-      Auth:
-        DefaultAuthorizer: CognitoAuthorizer
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt CognitoUserPool.Arn
       DefinitionBody:
         Fn::Transform:
           Name: AWS::Include

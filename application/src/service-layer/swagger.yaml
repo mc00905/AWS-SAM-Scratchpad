@@ -26,7 +26,7 @@ x-amazon-apigateway-gateway-responses:
     statusCode: 400
     responseTemplates:
       application/json: "{\n\"message\": $context.error.messageString,\n\"statusCode\": 400\n}"
-
+  
 
 paths:
   /products:
@@ -56,6 +56,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
+      security:
+        - UserPool: []
 
   /products/{productId}:
     get:
@@ -254,6 +256,17 @@ paths:
                 type: object
 
 components:
+  securitySchemes:
+    UserPool:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - Fn::Sub: ${CognitoUserPool.Arn}
+
   schemas:
     CreateProductRequest:
       type: object
