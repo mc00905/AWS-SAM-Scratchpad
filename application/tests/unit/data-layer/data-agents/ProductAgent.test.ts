@@ -30,16 +30,6 @@ describe('ProductAgent.class', () => {
 
             expect(dynamoDocumentClient.received().put(mockedPutCommandInput));
             expect(savedProduct.isOk()).toBe(true);
-
-            if (savedProduct.isOk()) {
-                const val = savedProduct.value;
-                expect(val).toHaveProperty('PK');
-                expect(val).toHaveProperty('SK');
-                expect(val).toHaveProperty('Name');
-                expect(val).toHaveProperty('Description');
-                expect(val).toHaveProperty('EntityType');
-                expect(val).toStrictEqual(databaseEntry);
-            }
         });
     });
     describe('ProductAgent.getProduct', () => {
