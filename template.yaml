@@ -11,9 +11,6 @@ Parameters:
   AppName:
     Type: String
     Default: aws-sam-scratchpad
-  Stage:
-    Type: String
-    Default: development
 
 Resources:
   #------ API Roles Config -------------------------------------------------------------------------------------------------------------
@@ -53,14 +50,41 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name:
-        Fn::Sub: ${AppName}-api-${Stage}
-      StageName: !Ref Stage 
+        Fn::Sub: ${AppName}-api
+      StageName: development
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
       DefinitionBody:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
             Location: application/src/service-layer/swagger.yaml
   
+  #------ Cognito UserPool Config -------------------------------------------------------------------------------------------------------------
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: CognitoUserPool
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+      UsernameAttributes:
+        - email
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: false
+  
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: CognitoUserPoolClient
+      GenerateSecret: false
+
   #------ DYNAMO Config -------------------------------------------------------------------------------------------------------------
   ExampleTable:
     Type: AWS::DynamoDB::Table

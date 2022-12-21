@@ -24,7 +24,7 @@ describe('ProductProvider.class', () => {
                 Description: description,
                 EntityType: EntityTypes.PRODUCT,
             };
-            productAgent.saveProduct(databaseEntry).returns(okAsync(databaseEntry));
+            productAgent.saveProduct(databaseEntry).returns(okAsync(undefined));
             const createdProduct = await productProvider.createProduct(name, description, productId);
             expect(productAgent.received().saveProduct(databaseEntry));
             const formattedProduct: NormalisedProduct = {

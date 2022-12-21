@@ -21,7 +21,7 @@ export class WarehouseAgent {
         this.tableName = tableName || process.env.TABLE_NAME;
     }
 
-    public saveWarehouse(warehouse: Warehouse): ResultAsync<Warehouse, GenericInternalServerError> {
+    public saveWarehouse(warehouse: Warehouse): ResultAsync<void, GenericInternalServerError> {
         const params: PutCommandInput = {
             TableName: this.tableName,
             Item: warehouse,
@@ -29,7 +29,6 @@ export class WarehouseAgent {
         return ResultAsync.fromPromise(
             (async () => {
                 await this.dynamoDocumentClient.put(params);
-                return warehouse;
             })(),
             (e) => {
                 return new GenericInternalServerError('Failed to create in Dynamo', JSON.stringify(e));
