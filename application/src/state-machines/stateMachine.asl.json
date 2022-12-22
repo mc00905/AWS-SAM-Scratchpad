@@ -1,0 +1,13 @@
+{
+    "Comment": "Create a product",
+    "StartAt": "CreateProduct",
+    "States": {
+        "CreateProduct": {
+            "Type": "Pass",
+            "Next": "End"
+        },
+        "End": {
+            "Type": "Succeed"
+        }
+    }
+}

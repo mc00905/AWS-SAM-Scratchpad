@@ -43,6 +43,63 @@ Resources:
                   - Fn::Sub: ${DeleteWarehouseFunction.Arn}
                   - Fn::Sub: ${AddStockOfProductToWarehouseFunction.Arn}
                   - Fn::Sub: ${GetAllStockForProductFunction.Arn}
+  
+  ApiStepFunctionAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: 
+            Fn::Sub: ${AppName}-api-step-function-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                  - states:StartSyncExecution
+                Resource:
+                  - Fn::Sub: ${StateMachineCreateProductCreateWarehouse.Arn}
+  
+
+  #------ Step Function Config -------------------------------------------------------------------------------------------------------------
+  StateMachineCreateProductCreateWarehouse:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: CreateProductCreateWarehouseStateMachine
+      DefinitionUri: application/src/state-machines/stateMachine.asl.json
+      Role: 
+        Fn::Sub: ${StateExecutionRole.Arn}
+      Type: EXPRESS
+      
+  StateExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "StatesExecutionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "lambda:InvokeFunction"
+                Resource:
+                  - Fn::Sub: ${CreateProductFunction.Arn}
+  
 
 
   #------ API Config -------------------------------------------------------------------------------------------------------------
