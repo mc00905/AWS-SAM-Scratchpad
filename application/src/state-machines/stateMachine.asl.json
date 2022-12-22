@@ -1,13 +1,25 @@
 {
-    "Comment": "Create a product",
-    "StartAt": "CreateProduct",
+    "Comment": "A state machine",
+    "StartAt": "HandleInput",
     "States": {
-        "CreateProduct": {
-            "Type": "Pass",
-            "Next": "End"
-        },
-        "End": {
-            "Type": "Succeed"
+        "HandleInput": {
+            "Type": "Task",
+            "Resource": "${HandleInputFunctionArn}",
+            "End": true,
+            "ResultPath": "$",
+            "Retry": [{
+              "ErrorEquals": ["States.TaskFailed"],
+              "IntervalSeconds": 1,
+              "MaxAttempts": 2,
+              "BackoffRate": 2.0
+            }],
+            "Catch": [{
+              "ErrorEquals": ["States.TaskFailed"],
+              "Next": "Fail"
+            }]
+          },
+        "Fail": {
+            "Type": "Fail"
         }
     }
 }

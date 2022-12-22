@@ -38,7 +38,7 @@ paths:
         credentials:
           Fn::Sub: ${ApiStepFunctionAccessRole.Arn}
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartExecution
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         httpMethod: POST
         type: aws
         responses:
@@ -46,13 +46,18 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: |
-                { "message": "Success" }
+                  #set ($bodyObj = $util.parseJson($input.body))
+                  #if ($bodyObj.status == "SUCCEEDED")
+                      $bodyObj.output
+                  #else
+                      #set($context.responseOverride.status = 500)
+                  #end
         requestTemplates:
           application/json: ##sanitise
             Fn::Sub: |-
               {
                 "input": "$util.escapeJavaScript($input.json('$'))",
-                "stateMachineArn": "${StateMachineCreateProductCreateWarehouse.Arn}"
+                "stateMachineArn": "${StateMachine.Arn}"
               }
 
       requestBody:
@@ -60,7 +65,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProductRequest'
+              $ref: '#/components/schemas/StateMachineRequest'
       responses:
         '200':
           description: A 200 response.
@@ -304,10 +309,22 @@ components:
           - Fn::Sub: ${CognitoUserPool.Arn}
 
   schemas:
+    StateMachineRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          description: text
+        description:
+          type: string
+          description: text
+      required:
+        - message
+        - description
     CreateProductRequest:
       type: object
       properties:
-        name:
+        message:
           type: string
           description: text
         description:

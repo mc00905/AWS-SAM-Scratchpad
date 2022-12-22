@@ -66,15 +66,18 @@ Resources:
                   - states:StartExecution
                   - states:StartSyncExecution
                 Resource:
-                  - Fn::Sub: ${StateMachineCreateProductCreateWarehouse.Arn}
+                  - Fn::Sub: ${StateMachine.Arn}
   
 
   #------ Step Function Config -------------------------------------------------------------------------------------------------------------
-  StateMachineCreateProductCreateWarehouse:
+  StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: CreateProductCreateWarehouseStateMachine
+      Name: StateMachine
       DefinitionUri: application/src/state-machines/stateMachine.asl.json
+      DefinitionSubstitutions:
+        HandleInputFunctionArn:
+            Fn::Sub: ${HandleInputFunction.Arn}
       Role: 
         Fn::Sub: ${StateExecutionRole.Arn}
       Type: EXPRESS
@@ -98,10 +101,24 @@ Resources:
               - Effect: "Allow"
                 Action: "lambda:InvokeFunction"
                 Resource:
-                  - Fn::Sub: ${CreateProductFunction.Arn}
+                  - Fn::Sub: ${HandleInputFunction.Arn}
   
-
-
+  HandleInputFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/state-machines/tasks/
+      Handler: HandleInput.handleInput
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - HandleInput.ts
   #------ API Config -------------------------------------------------------------------------------------------------------------
   Api:
     Type: AWS::Serverless::Api
