@@ -2,6 +2,8 @@ import { Handler } from 'aws-lambda';
 
 export const handleInput: Handler = (event, context, callback) => {
     callback(null, {
-        handled: true,
+        message: event.message,
+        description: event.description,
+        handledAgain: true,
     });
 };

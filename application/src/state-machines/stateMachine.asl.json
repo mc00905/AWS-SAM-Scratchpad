@@ -5,8 +5,28 @@
         "HandleInput": {
             "Type": "Task",
             "Resource": "${HandleInputFunctionArn}",
+            "Next": "HandleInput2",
+            "ResultPath": "$.handleInput1",
+            "Retry": [{
+              "ErrorEquals": ["States.TaskFailed"],
+              "IntervalSeconds": 1,
+              "MaxAttempts": 2,
+              "BackoffRate": 2.0
+            }],
+            "Catch": [{
+              "ErrorEquals": ["States.TaskFailed"],
+              "Next": "Fail"
+            }]
+          },
+          "HandleInput2": {
+            "Type": "Task",
+            "Resource": "${HandleInput2FunctionArn}",
             "End": true,
-            "ResultPath": "$",
+            "Parameters": {
+                "message.$": "$.message",
+                "description.$": "$.description"
+            },
+            "ResultPath": "$.handleInput2",
             "Retry": [{
               "ErrorEquals": ["States.TaskFailed"],
               "IntervalSeconds": 1,

@@ -13,7 +13,7 @@ Parameters:
     Default: aws-sam-scratchpad
 
 Resources:
-  #------ API Roles Config -------------------------------------------------------------------------------------------------------------
+  #------ API Gateway Lambda Proxy Roles Config -------------------------------------------------------------------------------------------------------------
   ApiAccessRole:
     Type: AWS::IAM::Role
     Properties:
@@ -44,6 +44,7 @@ Resources:
                   - Fn::Sub: ${AddStockOfProductToWarehouseFunction.Arn}
                   - Fn::Sub: ${GetAllStockForProductFunction.Arn}
   
+  #------ API Gateway Step Functions Proxy Role Config -------------------------------------------------------------------------------------------------------------
   ApiStepFunctionAccessRole:
     Type: AWS::IAM::Role
     Properties:
@@ -78,10 +79,13 @@ Resources:
       DefinitionSubstitutions:
         HandleInputFunctionArn:
             Fn::Sub: ${HandleInputFunction.Arn}
+        HandleInput2FunctionArn:
+            Fn::Sub: ${HandleInput2Function.Arn}
       Role: 
         Fn::Sub: ${StateExecutionRole.Arn}
       Type: EXPRESS
       
+  #------ Step Function Roles for Invoking Lamba States  -------------------------------------------------------------------------------------------------------------
   StateExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,7 +106,9 @@ Resources:
                 Action: "lambda:InvokeFunction"
                 Resource:
                   - Fn::Sub: ${HandleInputFunction.Arn}
-  
+                  - Fn::Sub: ${HandleInput2Function.Arn}
+
+  #------ State Machine Task Definitions -------------------------------------------------------------------------------------------------------------
   HandleInputFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -119,6 +125,23 @@ Resources:
         Sourcemap: true
         EntryPoints: 
         - HandleInput.ts
+
+  HandleInput2Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/state-machines/tasks/
+      Handler: HandleInput2.handleInput
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - HandleInput2.ts
   #------ API Config -------------------------------------------------------------------------------------------------------------
   Api:
     Type: AWS::Serverless::Api
@@ -171,7 +194,7 @@ Resources:
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
-  #------ PRODUCTS -------------------------------------------------------------------------------------------------------------
+  #------ PRODUCTS Lambda Functions -------------------------------------------------------------------------------------------------------------
   CreateProductFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -241,7 +264,7 @@ Resources:
         EntryPoints: 
         - ProductHandler.ts
 
-  #------ WAREHOUSE ------------------------------------------------------------------------------------------------------------
+  #------ WAREHOUSE Lambda Functions ------------------------------------------------------------------------------------------------------------
   CreateWarehouseFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -311,7 +334,7 @@ Resources:
         EntryPoints: 
         - WarehouseController.ts
 
-#------ PRODUCT_WAREHOUSE ------------------------------------------------------------------------------------------------------------
+#------ PRODUCT_WAREHOUSE Lambda Functions------------------------------------------------------------------------------------------------------------
   AddStockOfProductToWarehouseFunction:
     Type: AWS::Serverless::Function
     Properties:
