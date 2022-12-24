@@ -4,6 +4,11 @@ import { APIGatewayProxyResultResolver, ResponseLibrary } from '../../middleware
 import { DocumentNotFoundError } from '../../middleware/ErrorLibrary';
 import { ProductProvider } from '../providers/ProductProvider';
 
+interface CreateProductBody {
+    name: string;
+    description: string;
+}
+
 export class ProductController {
     private provider: ProductProvider;
     constructor(productProvider?: ProductProvider) {
@@ -11,7 +16,7 @@ export class ProductController {
     }
 
     public async createProduct(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-        const normalisedEvent = APIGatewayProxyEventFormatter(event);
+        const normalisedEvent = APIGatewayProxyEventFormatter<CreateProductBody>(event);
         const body = normalisedEvent.body;
         const name = body.name;
         const description = body.description;

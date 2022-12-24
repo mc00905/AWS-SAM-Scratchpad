@@ -3,8 +3,13 @@ import { APIGatewayProxyEventFormatter } from '../../middleware/APIGatewayProxyE
 import { APIGatewayProxyResultResolver, ResponseLibrary } from '../../middleware/APIGatewayProxyResultResolver';
 import { ProductWarehouseProvider } from '../providers/ProductWarehouseProvider';
 
+interface AddStockOfProductToWarehouseBody {
+    warehouseId: string;
+    quantity: number;
+}
+
 export const addStockOfProductToWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const normalisedEvent = APIGatewayProxyEventFormatter(event);
+    const normalisedEvent = APIGatewayProxyEventFormatter<AddStockOfProductToWarehouseBody>(event);
     const provider = new ProductWarehouseProvider();
     const pathParams = normalisedEvent.pathParameters;
     const productId = pathParams.productId;

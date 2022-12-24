@@ -4,8 +4,13 @@ import { APIGatewayProxyResultResolver, ResponseLibrary } from '../../middleware
 import { DocumentNotFoundError } from '../../middleware/ErrorLibrary';
 import { WarehouseProvider } from '../providers/WarehouseProvider';
 
+interface CreateWarehouseBody {
+    name: string;
+    postcode: string;
+}
+
 export const createWarehouse = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const normalisedEvent = APIGatewayProxyEventFormatter(event);
+    const normalisedEvent = APIGatewayProxyEventFormatter<CreateWarehouseBody>(event);
     const provider = new WarehouseProvider();
     const body = normalisedEvent.body;
     const name = body.name;
