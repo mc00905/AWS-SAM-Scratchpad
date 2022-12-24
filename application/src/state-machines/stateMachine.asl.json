@@ -6,16 +6,9 @@
             "Type": "Task",
             "Resource": "${HandleInputFunctionArn}",
             "Next": "HandleInput2",
-            "ResultPath": "$.handleInput1",
-            "Retry": [{
-              "ErrorEquals": ["States.TaskFailed"],
-              "IntervalSeconds": 1,
-              "MaxAttempts": 2,
-              "BackoffRate": 2.0
-            }],
             "Catch": [{
-              "ErrorEquals": ["States.TaskFailed"],
-              "Next": "Fail"
+              "ErrorEquals": ["DocumentNotFound"],
+              "Next": "DocumentNotFoundErrorFallback"
             }]
           },
           "HandleInput2": {
@@ -27,17 +20,16 @@
                 "description.$": "$.description"
             },
             "ResultPath": "$.handleInput2",
-            "Retry": [{
-              "ErrorEquals": ["States.TaskFailed"],
-              "IntervalSeconds": 1,
-              "MaxAttempts": 2,
-              "BackoffRate": 2.0
-            }],
             "Catch": [{
               "ErrorEquals": ["States.TaskFailed"],
               "Next": "Fail"
             }]
           },
+          "DocumentNotFoundErrorFallback": {
+            "Type": "Pass",
+            "Result": "Successfully handled the not found error",
+            "End": true
+        },
         "Fail": {
             "Type": "Fail"
         }

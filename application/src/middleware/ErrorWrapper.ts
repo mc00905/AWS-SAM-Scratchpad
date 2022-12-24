@@ -1,13 +1,13 @@
 export class ErrorWrapper extends Error {
     public details: string;
-    public errorIdentifier: string;
+    public name: string;
     public message: string;
     public status: number;
 
     constructor(status: number, errorIdentifier: string, message: string, details = '') {
         super(message);
         this.details = details;
-        this.errorIdentifier = errorIdentifier;
+        this.name = errorIdentifier;
         this.message = message;
         this.status = status;
     }
