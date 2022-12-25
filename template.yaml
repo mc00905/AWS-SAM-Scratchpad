@@ -11,6 +11,10 @@ Parameters:
   AppName:
     Type: String
     Default: aws-sam-scratchpad
+  BaseEmailAddress:
+    Description: Email address of sender
+    Type: String
+    Default: matthew.cooper6@btinternet.com
 
 Resources:
   #------ API Gateway Lambda Proxy Roles Config -------------------------------------------------------------------------------------------------------------
@@ -142,6 +146,29 @@ Resources:
         Sourcemap: true
         EntryPoints: 
         - HandleInput2.ts
+  
+  SendSESEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/state-machines/tasks/
+      Handler: SendSESEmail.sendEmail
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - SESCrudPolicy:
+          IdentityName: !Ref BaseEmailAddress
+      Environment:
+        Variables:
+          EMAIL_ADDRESS: !Ref BaseEmailAddress
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - SendSESEmail.ts
   #------ API Config -------------------------------------------------------------------------------------------------------------
   Api:
     Type: AWS::Serverless::Api
