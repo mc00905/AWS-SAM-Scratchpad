@@ -15,7 +15,9 @@ Parameters:
     Description: Email address of sender
     Type: String
     Default: matthew.cooper6@btinternet.com
-
+  AccessPointName:
+    Type: String
+    Default:  my-access-point
 Resources:
   #------ S3 Bucket Config -------------------------------------------------------------------------------------------------------------
   S3Bucket:
@@ -23,6 +25,44 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       BucketName: matts-example-bucket
+
+  S3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action: '*'
+            Effect: Allow
+            Resource:
+              - !GetAtt S3Bucket.Arn
+              - !Sub
+                  - '${varS3BucketArn}/*'
+                  - varS3BucketArn: !GetAtt S3Bucket.Arn
+            Principal:
+              AWS: '*'
+            Condition:
+              StringEquals:
+                's3:DataAccessPointAccount': !Sub ${AWS::AccountId}
+
+  S3AccessPoint:
+    Type: 'AWS::S3::AccessPoint'
+    Properties:
+      Name:             
+        Fn::Sub: ${AccessPointName}
+      Bucket: !Ref S3Bucket
+      Policy:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+            Effect: Allow
+            Resource:
+               - !Sub  'arn:${AWS::Partition}:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${AccessPointName}/object/*'
+            Principal:
+              AWS: 'arn:aws:iam::110213427029:role/sam-app-UploadJSONToBucketFunctionRole-1TMTK8K4SQXNI' #todo: create role
 
   #------ API Gateway Lambda Proxy Roles Config -------------------------------------------------------------------------------------------------------------
   ApiAccessRole:
@@ -191,12 +231,10 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - x86_64
-      Policies:
-       - S3CrudPolicy:
-          BucketName: !Ref S3Bucket 
       Environment:
         Variables:
           BUCKET_NAME: !Ref S3Bucket
+          ACCESS_POINT_ARN: !GetAtt S3AccessPoint.Arn
 
     Metadata:
       BuildMethod: esbuild
