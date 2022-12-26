@@ -4,10 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const BUCKET_NAME = process.env.BUCKET_NAME || 'BUCKET_NAME';
+const ACCESS_POINT_ARN = process.env.ACCESS_POINT_ARN || 'ACCESS_POINT_ARN';
 
 export const uploadJSONToBucket: Handler = async (event, context) => {
     const bucketParams: PutObjectCommandInput = {
-        Bucket: BUCKET_NAME,
+        Bucket: ACCESS_POINT_ARN,
         Key: uuidv4(),
         Body: JSON.stringify({
             message: 'Hello World!',
