@@ -3,35 +3,54 @@
     "StartAt": "HandleInput",
     "States": {
         "HandleInput": {
-            "Type": "Task",
-            "Resource": "${HandleInputFunctionArn}",
-            "Next": "HandleInput2",
-            "Catch": [{
-              "ErrorEquals": ["DocumentNotFound"],
-              "Next": "DocumentNotFoundErrorFallback"
-            }]
-          },
-          "HandleInput2": {
-            "Type": "Task",
-            "Resource": "${HandleInput2FunctionArn}",
-            "End": true,
-            "Parameters": {
-                "message.$": "$.message",
-                "description.$": "$.description"
-            },
-            "ResultPath": "$.handleInput2",
-            "Catch": [{
-              "ErrorEquals": ["States.TaskFailed"],
-              "Next": "Fail"
-            }]
-          },
-          "DocumentNotFoundErrorFallback": {
-            "Type": "Pass",
-            "Result": "Successfully handled the not found error",
-            "End": true
+          "Type": "Task",
+          "Resource": "${HandleInputFunctionArn}",
+          "Next": "HandleInput2",
+          "ResultPath": "$.handleInput",
+          "Catch": [{
+            "ErrorEquals": ["DocumentNotFound"],
+            "Next": "DocumentNotFoundErrorFallback"
+          }]
         },
-        "Fail": {
-            "Type": "Fail"
-        }
-    }
+        "HandleInput2": {
+          "Type": "Task",
+          "Resource": "${HandleInput2FunctionArn}",
+          "Next": "SendSESEmail",
+          "Parameters": {
+              "message.$": "$.message",
+              "description.$": "$.description"
+          },
+          "ResultPath": "$.handleInput2",
+          "Catch": [{
+            "ErrorEquals": ["States.TaskFailed"],
+            "Next": "Fail"
+          }]
+        },
+        "SendSESEmail": {
+          "Type": "Task",
+          "Resource": "${SendSESEmailFunctionArn}",
+          "Next": "UploadJSONToBucket",
+          "Catch": [{
+            "ErrorEquals": ["DocumentNotFound"],
+            "Next": "DocumentNotFoundErrorFallback"
+          }]
+        },
+        "UploadJSONToBucket": {
+          "Type": "Task",
+          "Resource": "${UploadJSONToBucketFunctionArn}",
+          "End": true,
+          "Catch": [{
+            "ErrorEquals": ["DocumentNotFound"],
+            "Next": "DocumentNotFoundErrorFallback"
+          }]
+        },
+        "DocumentNotFoundErrorFallback": {
+          "Type": "Pass",
+          "Result": "Successfully handled the not found error",
+          "End": true
+      },
+      "Fail": {
+          "Type": "Fail"
+      }
+  }
 }

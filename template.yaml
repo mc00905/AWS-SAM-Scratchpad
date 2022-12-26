@@ -5,7 +5,7 @@ Description: >
   
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 30
 
 Parameters:
   AppName:
@@ -17,6 +17,13 @@ Parameters:
     Default: matthew.cooper6@btinternet.com
 
 Resources:
+  #------ S3 Bucket Config -------------------------------------------------------------------------------------------------------------
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: matts-example-bucket
+
   #------ API Gateway Lambda Proxy Roles Config -------------------------------------------------------------------------------------------------------------
   ApiAccessRole:
     Type: AWS::IAM::Role
@@ -85,6 +92,10 @@ Resources:
             Fn::Sub: ${HandleInputFunction.Arn}
         HandleInput2FunctionArn:
             Fn::Sub: ${HandleInput2Function.Arn}
+        SendSESEmailFunctionArn:
+            Fn::Sub: ${SendSESEmailFunction.Arn}
+        UploadJSONToBucketFunctionArn:
+            Fn::Sub: ${UploadJSONToBucketFunction.Arn}
       Role: 
         Fn::Sub: ${StateExecutionRole.Arn}
       Type: EXPRESS
@@ -111,6 +122,8 @@ Resources:
                 Resource:
                   - Fn::Sub: ${HandleInputFunction.Arn}
                   - Fn::Sub: ${HandleInput2Function.Arn}
+                  - Fn::Sub: ${SendSESEmailFunction.Arn}
+                  - Fn::Sub: ${UploadJSONToBucketFunction.Arn}
 
   #------ State Machine Task Definitions -------------------------------------------------------------------------------------------------------------
   HandleInputFunction:
@@ -169,6 +182,30 @@ Resources:
         Sourcemap: true
         EntryPoints: 
         - SendSESEmail.ts
+  
+  UploadJSONToBucketFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/state-machines/tasks/
+      Handler: UploadJSONToBucket.uploadJSONToBucket
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Policies:
+       - S3CrudPolicy:
+          BucketName: !Ref S3Bucket 
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3Bucket
+
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - UploadJSONToBucket.ts
   #------ API Config -------------------------------------------------------------------------------------------------------------
   Api:
     Type: AWS::Serverless::Api
