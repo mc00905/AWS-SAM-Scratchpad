@@ -98,7 +98,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
       security:
-        - UserPool: []
+        - LambdaTokenAuthorizer: []
 
   /products/{productId}:
     get:
@@ -298,6 +298,17 @@ paths:
 
 components:
   securitySchemes:
+    LambdaTokenAuthorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        type: token
+        authorizerUri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaTokenAuthorizerFunction.Arn}/invocations
+        authorizerCredentials:
+          Fn::Sub: ${AuthorizerLambdaAccessRole.Arn}
     UserPool:
       type: apiKey
       name: Authorization

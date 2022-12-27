@@ -164,6 +164,48 @@ Resources:
                   - Fn::Sub: ${HandleInput2Function.Arn}
                   - Fn::Sub: ${SendSESEmailFunction.Arn}
                   - Fn::Sub: ${UploadJSONToBucketFunction.Arn}
+  
+  #------ LambdaAuth Definitions -------------------------------------------------------------------------------------------------------------
+  LambdaTokenAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: application/src/service-layer/auth/
+      Handler: LambdaAuthorizer.authorize
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - LambdaAuthorizer.ts
+
+  AuthorizerLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: 
+            Fn::Sub: ${AppName}-api-lambda-authorizer-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - Fn::Sub: ${LambdaTokenAuthorizerFunction.Arn}
+
 
   #------ State Machine Task Definitions -------------------------------------------------------------------------------------------------------------
   HandleInputFunction:
