@@ -46,6 +46,30 @@ Resources:
               StringEquals:
                 's3:DataAccessPointAccount': !Sub ${AWS::AccountId}
 
+  LambdaS3AccessPointRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: 
+            Fn::Sub: ${AppName}-s3-access-point-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
   S3AccessPoint:
     Type: 'AWS::S3::AccessPoint'
     Properties:
@@ -62,7 +86,7 @@ Resources:
             Resource:
                - !Sub  'arn:${AWS::Partition}:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${AccessPointName}/object/*'
             Principal:
-              AWS: 'arn:aws:iam::110213427029:role/sam-app-UploadJSONToBucketFunctionRole-1TMTK8K4SQXNI' #todo: create role
+              AWS: !GetAtt LambdaS3AccessPointRole.Arn
 
   #------ API Gateway Lambda Proxy Roles Config -------------------------------------------------------------------------------------------------------------
   ApiAccessRole:
@@ -271,6 +295,8 @@ Resources:
       CodeUri: application/src/state-machines/tasks/
       Handler: UploadJSONToBucket.uploadJSONToBucket
       Runtime: nodejs18.x
+      Role: 
+        !GetAtt LambdaS3AccessPointRole.Arn
       Architectures:
         - x86_64
       Environment:
