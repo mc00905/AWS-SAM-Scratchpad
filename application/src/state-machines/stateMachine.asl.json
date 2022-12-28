@@ -38,6 +38,7 @@
         "UploadJSONToBucket": {
           "Type": "Task",
           "Resource": "${UploadJSONToBucketFunctionArn}",
+          "ResultPath": "$",
           "End": true,
           "Catch": [{
             "ErrorEquals": ["DocumentNotFound"],
