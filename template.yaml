@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  aws-sam-scratchpad
+  Cloudformation template for my SAM application  
   
 Globals:
   Function:
@@ -10,7 +10,10 @@ Globals:
 Parameters:
   AppName:
     Type: String
-    Default: aws-sam-scratchpad
+    Default: scratchpad
+  Stage:
+    Type: String
+    Default: development
   BaseEmailAddress:
     Description: Email address of sender
     Type: String
@@ -18,6 +21,7 @@ Parameters:
   AccessPointName:
     Type: String
     Default:  my-access-point
+
 Resources:
   #------ S3 Bucket Config -------------------------------------------------------------------------------------------------------------
   S3Bucket:
@@ -37,9 +41,7 @@ Resources:
             Effect: Allow
             Resource:
               - !GetAtt S3Bucket.Arn
-              - !Sub
-                  - '${varS3BucketArn}/*'
-                  - varS3BucketArn: !GetAtt S3Bucket.Arn
+              - !Sub ${S3Bucket.Arn}/*
             Principal:
               AWS: '*'
             Condition:
@@ -59,7 +61,7 @@ Resources:
             Action: sts:AssumeRole
       Policies:
         - PolicyName: 
-            Fn::Sub: ${AppName}-s3-access-point-policy
+            !Sub ${AppName}-s3-access-point-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -74,7 +76,7 @@ Resources:
     Type: 'AWS::S3::AccessPoint'
     Properties:
       Name:             
-        Fn::Sub: ${AccessPointName}
+        !Sub ${AccessPointName}
       Bucket: !Ref S3Bucket
       Policy:
         Version: "2012-10-17"
@@ -101,8 +103,7 @@ Resources:
                 - apigateway.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: 
-            Fn::Sub: ${AppName}-api-access-policy
+        - PolicyName: !Sub ${AppName}-api-access-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -110,14 +111,14 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: ${CreateProductFunction.Arn}
-                  - Fn::Sub: ${GetProductFunction.Arn}
-                  - Fn::Sub: ${DeleteProductFunction.Arn}
-                  - Fn::Sub: ${CreateWarehouseFunction.Arn}
-                  - Fn::Sub: ${GetWarehouseFunction.Arn}
-                  - Fn::Sub: ${DeleteWarehouseFunction.Arn}
-                  - Fn::Sub: ${AddStockOfProductToWarehouseFunction.Arn}
-                  - Fn::Sub: ${GetAllStockForProductFunction.Arn}
+                  - !GetAtt CreateProductFunction.Arn
+                  - !GetAtt GetProductFunction.Arn
+                  - !GetAtt DeleteProductFunction.Arn
+                  - !GetAtt CreateWarehouseFunction.Arn
+                  - !GetAtt GetWarehouseFunction.Arn
+                  - !GetAtt DeleteWarehouseFunction.Arn
+                  - !GetAtt AddStockOfProductToWarehouseFunction.Arn
+                  - !GetAtt GetAllStockForProductFunction.Arn
   
   #------ API Gateway Step Functions Proxy Role Config -------------------------------------------------------------------------------------------------------------
   ApiStepFunctionAccessRole:
@@ -133,7 +134,7 @@ Resources:
             Action: sts:AssumeRole
       Policies:
         - PolicyName: 
-            Fn::Sub: ${AppName}-api-step-function-access-policy
+            !Sub ${AppName}-api-step-function-access-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -142,7 +143,7 @@ Resources:
                   - states:StartExecution
                   - states:StartSyncExecution
                 Resource:
-                  - Fn::Sub: ${StateMachine.Arn}
+                  - !Sub ${StateMachine.Arn}
   
 
   #------ Step Function Config -------------------------------------------------------------------------------------------------------------
@@ -153,15 +154,15 @@ Resources:
       DefinitionUri: application/src/state-machines/stateMachine.asl.json
       DefinitionSubstitutions:
         HandleInputFunctionArn:
-            Fn::Sub: ${HandleInputFunction.Arn}
+            !GetAtt HandleInputFunction.Arn
         HandleInput2FunctionArn:
-            Fn::Sub: ${HandleInput2Function.Arn}
+            !GetAtt HandleInput2Function.Arn
         SendSESEmailFunctionArn:
-            Fn::Sub: ${SendSESEmailFunction.Arn}
+            !GetAtt SendSESEmailFunction.Arn
         UploadJSONToBucketFunctionArn:
-            Fn::Sub: ${UploadJSONToBucketFunction.Arn}
+            !GetAtt UploadJSONToBucketFunction.Arn
       Role: 
-        Fn::Sub: ${StateExecutionRole.Arn}
+        !Sub ${StateExecutionRole.Arn}
       Type: EXPRESS
       
   #------ Step Function Roles for Invoking Lamba States  -------------------------------------------------------------------------------------------------------------
@@ -184,10 +185,10 @@ Resources:
               - Effect: "Allow"
                 Action: "lambda:InvokeFunction"
                 Resource:
-                  - Fn::Sub: ${HandleInputFunction.Arn}
-                  - Fn::Sub: ${HandleInput2Function.Arn}
-                  - Fn::Sub: ${SendSESEmailFunction.Arn}
-                  - Fn::Sub: ${UploadJSONToBucketFunction.Arn}
+                  - !GetAtt HandleInputFunction.Arn
+                  - !GetAtt HandleInput2Function.Arn
+                  - !GetAtt SendSESEmailFunction.Arn
+                  - !GetAtt UploadJSONToBucketFunction.Arn
   
   #------ LambdaAuth Definitions -------------------------------------------------------------------------------------------------------------
   LambdaTokenAuthorizerFunction:
@@ -220,7 +221,7 @@ Resources:
             Action: sts:AssumeRole
       Policies:
         - PolicyName: 
-            Fn::Sub: ${AppName}-api-lambda-authorizer-policy
+            !Sub ${AppName}-api-lambda-authorizer-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -228,7 +229,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: ${LambdaTokenAuthorizerFunction.Arn}
+                  - !Sub ${LambdaTokenAuthorizerFunction.Arn}
 
 
   #------ State Machine Task Definitions -------------------------------------------------------------------------------------------------------------
@@ -316,9 +317,9 @@ Resources:
   Api:
     Type: AWS::Serverless::Api
     Properties:
-      Name:
-        Fn::Sub: ${AppName}-api
-      StageName: development
+      Name: !Sub ${AppName}-api
+      OpenApiVersion: '3.0.0'
+      StageName: !Sub ${Stage}
       DefinitionBody:
         Fn::Transform:
           Name: AWS::Include
@@ -543,8 +544,11 @@ Resources:
         SNSEvent:
           Type: SNS
           Properties:
-            Topic: !Ref ProductWarehouseSNSTopic
-            SqsSubscription: true
+            FilterPolicy:
+              origin:
+                - addStockOfProductToWarehouse
+            Topic: !Ref ProductWarehouseSNSTopic            
+
       Environment:
         Variables:
           SNS_TOPIC: !Ref ProductWarehouseSNSTopic

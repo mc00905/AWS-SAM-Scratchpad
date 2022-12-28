@@ -29,7 +29,7 @@ export class ProductWarehouseProvider {
             EntityType: EntityTypes.PRODUCT_WAREHOUSE,
         };
         const op = await this.agent.addStockOfProductToWarehouse(productWarehouse);
-        await this.publishers.publish('Successfully created!');
+        await this.publishers.publish('Added an item!', 'addStockOfProductToWarehouse');
         if (op.isOk()) {
             return okAsync(productWarehouse);
         } else {
