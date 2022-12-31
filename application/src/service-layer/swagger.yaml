@@ -305,6 +305,7 @@ components:
       x-amazon-apigateway-authtype: "custom"
       x-amazon-apigateway-authorizer:
         type: token
+        identityValidationExpression: Bearer\s(.*?)
         authorizerUri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaTokenAuthorizerFunction.Arn}/invocations
         authorizerCredentials:

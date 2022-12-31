@@ -23,7 +23,7 @@ const generatePolicy = (principalId: string, effect: Effect, resource: string) =
     };
 };
 export const authorize: Handler = async (event, context, callback) => {
-    const token = event.authorizationToken;
+    const token = event.authorizationToken.substring(7);
     const methodArn = event.methodArn;
     switch (token) {
         case 'allow':
